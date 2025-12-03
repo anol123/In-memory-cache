@@ -1,4 +1,7 @@
+use crate::cache::InMemoryCache;
+
 mod cache;
 fn main() {
-    println!("Hello, world!");
+    let cache = InMemoryCache::new();
+    InMemoryCache::insert("Anol".to_string());
 }
