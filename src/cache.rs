@@ -11,7 +11,7 @@ impl InMemoryCache{
     pub fn new()->Self{
         Self { store: Arc::new(Mutex::new(HashMap::new())) }
     }
-    pub fn insert_into(&mut self, key:String, value: Vec<u8>, ttl: Duration){
+    pub fn insert(&mut self, key:String, value: Vec<u8>, ttl: Duration){
         //let expires_at = Instant::now() + ttl;
         let entry = CacheEntry{
             value, 
