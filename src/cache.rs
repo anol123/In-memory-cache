@@ -29,4 +29,8 @@ impl InMemoryCache{
             }
         })
     }
+
+    pub fn remove(&mut self, key: &str){
+        self.store.lock().unwrap().remove(key);
+    }
 }
