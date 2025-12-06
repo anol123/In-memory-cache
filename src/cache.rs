@@ -17,6 +17,7 @@ impl InMemoryCache{
             value, 
             expiry_at: Instant::now() + ttl };
         self.store.lock().unwrap().insert(key,entry);
+        println!("Insertion done successfully!!!")
     }
 
     pub fn get(&self, key:&str)-> Option<Vec<u8>>{
@@ -33,4 +34,6 @@ impl InMemoryCache{
     pub fn remove(&mut self, key: &str){
         self.store.lock().unwrap().remove(key);
     }
+
+
 }
