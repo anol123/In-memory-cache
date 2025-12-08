@@ -1,16 +1,28 @@
-use std::time::Duration;
+use std::{thread, time::Duration};
 
 use crate::cache::InMemoryCache;
 
 mod cache;
 fn main() {
-    let mut cache = InMemoryCache::new();
-    cache.insert("Anol".to_string(),b"CSE".to_vec(), Duration::from_secs(5));
+    let cache = InMemoryCache::new();
+    //cache.insert("Anol".to_string(),b"CSE".to_vec(), Duration::from_secs(5));
     // cache.insert("abc".to_string(),b"NOC".to_vec(), Duration::from_secs(6));
     // cache.insert("xyz".to_string(),b"we".to_vec(), Duration::from_secs(5));
-    cache.insert("pqr".to_string(),b"vbvb".to_vec(), Duration::from_secs(15));
+    //cache.insert("pqr".to_string(),b"vbvb".to_vec(), Duration::from_secs(15));
     //cache.insert("Anol".to_string(),b"CSE".to_vec(), Duration::from_secs(5));
 
-    println!("{:?}",cache.get("Anol"));
-    println!("{:?}",cache.get("pqr"));
+    // println!("{:?}",cache.get("Anol"));
+    // println!("{:?}",cache.get("pqr"));
+
+
+    let c1 = cache.clone();
+    let t1 = thread::spawn(move||{
+        c1.insert("Anol", b"CSE".to_vec(), Duration::from_secs(5));
+    });
+
+    let c2 = cache.clone();
+    let t2 = thread::spawn(move||{
+        let msg = c2.get("Anol");
+        println!("Thread2 get : {:?}",msg);
+    });
 }

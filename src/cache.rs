@@ -7,16 +7,26 @@ pub struct CacheEntry{
 pub struct InMemoryCache{
     store: Arc<Mutex<HashMap<String, CacheEntry>>>,
 }
+
+impl Clone for InMemoryCache{
+    fn clone(&self)->Self{
+        Self { 
+            store: Arc::clone(&self.store)
+        }
+    }
+}
 impl InMemoryCache{
     pub fn new()->Self{
         Self { store: Arc::new(Mutex::new(HashMap::new())) }
     }
-    pub fn insert(&mut self, key:String, value: Vec<u8>, ttl: Duration){
+
+    //Notice: insert() method signature no longer needs &mut self because Mutex handles interior mutability.
+    pub fn insert(&self, key:&str, value: Vec<u8>, ttl: Duration){
         //let expires_at = Instant::now() + ttl;
         let entry = CacheEntry{
             value, 
             expiry_at: Instant::now() + ttl };
-        self.store.lock().unwrap().insert(key,entry);
+        self.store.lock().unwrap().insert(key.to_string(),entry);
         println!("Insertion done successfully!!!")
     }
 
