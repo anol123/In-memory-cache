@@ -6,13 +6,39 @@ pub struct CacheEntry{
 }
 pub struct InMemoryCache{
     store: Arc<Mutex<HashMap<String, CacheEntry>>>,
+    shutdown: Arc<Mutex<bool>>,
+    cleanup_thread: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Clone for InMemoryCache{
     fn clone(&self)->Self{
-        Self { 
-            store: Arc::clone(&self.store)
+         let store = Arc::new(Mutex::new(HashMap::new()));
+    let shutdown = Arc::new(Mutex::new(false));
+
+    let store_clone = Arc::clone(&store);
+    let shutdown_clone = Arc::clone(&shutdown);
+
+    let handle = std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(cleanup_interval);
+
+            // Check if main cache signaled shutdown
+            if *shutdown_clone.lock().unwrap() {
+                break;    // <-- Exit the cleanup thread
+            }
+
+            // Remove expired entries
+            let mut map = store_clone.lock().unwrap();
+            let now = Instant::now();
+            map.retain(|_, entry| entry.expires_at > now);
         }
+    });
+
+    Self {
+        store,
+        shutdown,
+        cleanup_thread: Some(handle),
+    }
     }
 }
 impl InMemoryCache{
