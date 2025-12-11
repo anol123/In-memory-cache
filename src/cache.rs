@@ -1,75 +1,81 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}, time::{Duration, Instant}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
-pub struct CacheEntry{
-    value : Vec<u8>,
+pub struct CacheEntry {
+    value: Vec<u8>,
     expiry_at: Instant,
 }
-pub struct InMemoryCache{
+pub struct InMemoryCache {
     store: Arc<Mutex<HashMap<String, CacheEntry>>>,
     shutdown: Arc<Mutex<bool>>,
     cleanup_thread: Option<std::thread::JoinHandle<()>>,
 }
 
-impl Clone for InMemoryCache{
-    fn clone(&self)->Self{
-         let store = Arc::new(Mutex::new(HashMap::new()));
-    let shutdown = Arc::new(Mutex::new(false));
+// impl Clone for InMemoryCache{
+//     fn clone(&self)->Self{
+//         Self {
+//             store: Arc::clone(&self.store),
+//             shutdown: Arc::new(Mutex::new(false)),
+//             cleanup_thread:
+//         }
+//     }
+// }
+impl InMemoryCache {
+    pub fn new(cleanup_interval: Duration) -> Self {
+        let store = Arc::new(Mutex::new(HashMap::new()));
+        let shutdown = Arc::new(Mutex::new(false));
 
-    let store_clone = Arc::clone(&store);
-    let shutdown_clone = Arc::clone(&shutdown);
+        let store_clone = Arc::clone(&store);
+        let shutdown_clone = Arc::clone(&shutdown);
 
-    let handle = std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(cleanup_interval);
+        let handle = std::thread::spawn(move || {
+            loop {
+                std::thread::sleep(cleanup_interval);
 
-            // Check if main cache signaled shutdown
-            if *shutdown_clone.lock().unwrap() {
-                break;    // <-- Exit the cleanup thread
+                // Check if main cache signaled shutdown
+                if *shutdown_clone.lock().unwrap() {
+                    break; // <-- Exit the cleanup thread
+                }
+
+                // Remove expired entries
+                let mut map = store_clone.lock().unwrap();
+                let now = Instant::now();
+                map.retain(|_, entry| entry.expires_at > now);
             }
+        });
 
-            // Remove expired entries
-            let mut map = store_clone.lock().unwrap();
-            let now = Instant::now();
-            map.retain(|_, entry| entry.expires_at > now);
+        Self {
+            store,
+            shutdown,
+            cleanup_thread: Some(handle),
         }
-    });
-
-    Self {
-        store,
-        shutdown,
-        cleanup_thread: Some(handle),
-    }
-    }
-}
-impl InMemoryCache{
-    pub fn new()->Self{
-        Self { store: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     //Notice: insert() method signature no longer needs &mut self because Mutex handles interior mutability.
-    pub fn insert(&self, key:&str, value: Vec<u8>, ttl: Duration){
+    pub fn insert(&self, key: &str, value: Vec<u8>, ttl: Duration) {
         //let expires_at = Instant::now() + ttl;
-        let entry = CacheEntry{
-            value, 
-            expiry_at: Instant::now() + ttl };
-        self.store.lock().unwrap().insert(key.to_string(),entry);
+        let entry = CacheEntry {
+            value,
+            expiry_at: Instant::now() + ttl,
+        };
+        self.store.lock().unwrap().insert(key.to_string(), entry);
         println!("Insertion done successfully!!!")
     }
 
-    pub fn get(&self, key:&str)-> Option<Vec<u8>>{
-        self.store.lock().unwrap().get(key).and_then(|entry|{
-            if Instant::now()< entry.expiry_at{
+    pub fn get(&self, key: &str) -> Option<Vec<u8>> {
+        self.store.lock().unwrap().get(key).and_then(|entry| {
+            if Instant::now() < entry.expiry_at {
                 Some(entry.value.clone())
-            }
-            else{
+            } else {
                 None
             }
         })
     }
 
-    pub fn remove(&mut self, key: &str){
+    pub fn remove(&mut self, key: &str) {
         self.store.lock().unwrap().remove(key);
     }
-
-
 }
