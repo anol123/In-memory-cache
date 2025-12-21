@@ -4,6 +4,7 @@ use crate::cache::InMemoryCache;
 
 mod cache;
 fn main() {
+    println!("<-----Wrong code------>")
     let cache = InMemoryCache::new(Duration::from_secs(1));
     //cache.insert("Anol".to_string(),b"CSE".to_vec(), Duration::from_secs(5));
     // cache.insert("abc".to_string(),b"NOC".to_vec(), Duration::from_secs(6));
