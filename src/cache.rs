@@ -4,6 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[derive(Clone)]
 pub struct CacheEntry {
     value: Vec<u8>,
     expiry_at: Instant,
