@@ -9,25 +9,26 @@ pub struct CacheEntry {
     value: Vec<u8>,
     expiry_at: Instant,
 }
-#[derive(Clone)]
+
 pub struct InMemoryCache {
     store: Arc<Mutex<HashMap<String, CacheEntry>>>,
     shutdown: Arc<Mutex<bool>>,
     cleanup_thread: Option<std::thread::JoinHandle<()>>,
 }
 
-// impl Clone for InMemoryCache{
-//     fn clone(&self)->Self{
-//         Self {
-//             store: Arc::clone(&self.store),
-//             shutdown: Arc::new(Mutex::new(false)),
-//             cleanup_thread:
-//         }
-//     }
-// }
+impl Clone for InMemoryCache {
+    fn clone(&self) -> Self {
+        Self {
+            store: Arc::clone(&self.store),
+            shutdown: Arc::clone(&self.shutdown),
+            cleanup_thread: None, // ❗ DO NOT CLONE THREAD
+        }
+    }
+}
+
 impl InMemoryCache {
     pub fn new(cleanup_interval: Duration) -> Self {
-        let store = Arc::new(Mutex::new(HashMap::new()));
+        let store = Arc::new(Mutex::new(HashMap::<String, CacheEntry>::new()));
         let shutdown = Arc::new(Mutex::new(false));
 
         let store_clone = Arc::clone(&store);
@@ -45,7 +46,7 @@ impl InMemoryCache {
                 // Remove expired entries
                 let mut map = store_clone.lock().unwrap();
                 let now = Instant::now();
-                map.retain(|_, entry| entry.expires_at > now);
+                map.retain(|_, entry| entry.expiry_at > now);
             }
         });
 
