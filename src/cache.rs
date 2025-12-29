@@ -9,6 +9,7 @@ pub struct CacheEntry {
     value: Vec<u8>,
     expiry_at: Instant,
 }
+#[derive(Clone)]
 pub struct InMemoryCache {
     store: Arc<Mutex<HashMap<String, CacheEntry>>>,
     shutdown: Arc<Mutex<bool>>,
