@@ -16,27 +16,26 @@ fn main() {
     // println!("{:?}",cache.get("Anol"));
     // println!("{:?}",cache.get("pqr"));
 
-
     let c1 = cache.clone();
-    let t1 = thread::spawn(move||{
+    let t1 = thread::spawn(move || {
         c1.insert("Anol", b"CSE".to_vec(), Duration::from_secs(5));
     });
 
     let c2 = cache.clone();
-    let t2 = thread::spawn(move||{
+    let t2 = thread::spawn(move || {
         let msg = c2.get("Anol");
-        println!("Thread2 get : {:?}",msg);
+        println!("Thread2 get : {:?}", msg);
     });
-    
+
     let c3 = cache.clone();
-    let t2 = thread::spawn(move||{
+    let t2 = thread::spawn(move || {
         c3.insert("msg", b"apicall".to_vec(), Duration::from_secs(15));
     });
 
     let c4 = cache.clone();
-    let c4 = thread::spawn(move||{
+    let c4 = thread::spawn(move || {
         //let data = c4.get("msg");
-        println!("Thread4 get : {:?}",c4.get("msg"));
+        println!("Thread4 get : {:?}", c4.get("msg"));
     });
 
     t1.join().unwrap();
